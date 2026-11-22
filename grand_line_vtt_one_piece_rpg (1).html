@@ -1,0 +1,1950 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Grand Line VTT - One Piece RPG</title>
+  
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- PeerJS with Fallback -->
+  <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+  <script>
+    if (typeof Peer === 'undefined') {
+      document.write('<script src="https://cdn.jsdelivr.net/npm/peerjs@1.5.4/dist/peerjs.min.js"><\/script>');
+    }
+  </script>
+  
+  <!-- Lucide & FontAwesome Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <!-- Google Fonts: Pirata One, Cinzel, Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;900&family=Inter:wght@300;400;600;700&family=Pirata+One&display=swap" rel="stylesheet">
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            ocean: {
+              950: '#020710',
+              900: '#051124',
+              800: '#0b1e38',
+              700: '#132c4f',
+              600: '#1d4170'
+            },
+            parchment: {
+              100: '#fefcf6',
+              200: '#f5e8c7',
+              300: '#e9d6a3',
+              800: '#422e1a',
+              900: '#2c1c0d'
+            },
+            gold: {
+              300: '#fef08a',
+              400: '#facc15',
+              500: '#eab308',
+              600: '#ca8a04',
+              700: '#a16207'
+            },
+            pirateRed: {
+              500: '#ef4444',
+              600: '#dc2626',
+              700: '#b91c1c',
+              800: '#991b1b',
+              900: '#6b1111'
+            },
+            opeCyan: {
+              400: '#38bdf8',
+              500: '#06b6d4',
+              600: '#0891b2'
+            }
+          },
+          fontFamily: {
+            pirate: ['Pirata One', 'cursive'],
+            heading: ['Cinzel', 'serif'],
+            sans: ['Inter', 'sans-serif']
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    ::-webkit-scrollbar { width: 8px; height: 8px; }
+    ::-webkit-scrollbar-track { background: #051124; }
+    ::-webkit-scrollbar-thumb { background: #ca8a04; border-radius: 4px; }
+    
+    .parchment-bg {
+      background-color: #f5e8c7;
+      background-image: radial-gradient(#e9d6a3 1.2px, transparent 0);
+      background-size: 16px 16px;
+    }
+    .wanted-card {
+      box-shadow: 0 12px 28px -5px rgba(0,0,0,0.85), 0 8px 10px -6px rgba(0,0,0,0.7);
+      border: 4px solid #422e1a;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .wood-border {
+      border: 4px solid #7c4a21;
+      box-shadow: inset 0 0 14px rgba(0,0,0,0.8);
+    }
+    
+    @keyframes dice-spin {
+      0% { transform: scale(0.6) rotate(-180deg); opacity: 0.4; }
+      50% { transform: scale(1.3) rotate(90deg); }
+      100% { transform: scale(1) rotate(0deg); opacity: 1; }
+    }
+    .animate-roll { animation: dice-spin 0.45s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+
+    /* Haki Effect Aura */
+    @keyframes haki-glow {
+      0%, 100% { box-shadow: 0 0 15px rgba(185, 28, 28, 0.9), 0 0 30px rgba(147, 51, 234, 0.7); }
+      50% { box-shadow: 0 0 28px rgba(220, 38, 38, 1), 0 0 55px rgba(168, 85, 247, 0.95); }
+    }
+    .haki-effect { animation: haki-glow 2s infinite; }
+
+    /* Law's ROOM Spatial Sphere Effect */
+    @keyframes room-dome-pulse {
+      0%, 100% { 
+        box-shadow: 0 0 20px rgba(6, 182, 212, 0.85), inset 0 0 25px rgba(56, 189, 248, 0.45);
+        border-color: #38bdf8;
+      }
+      50% { 
+        box-shadow: 0 0 40px rgba(6, 182, 212, 1), inset 0 0 45px rgba(14, 165, 233, 0.75);
+        border-color: #67e8f9;
+      }
+    }
+    .room-effect {
+      animation: room-dome-pulse 2.2s infinite ease-in-out;
+      border: 4px solid #38bdf8 !important;
+    }
+
+    /* Dramatic Shake for Battle Event */
+    @keyframes battle-shake {
+      0%, 100% { transform: translate(0, 0) rotate(0deg); }
+      10% { transform: translate(-8px, -8px) rotate(-1deg); }
+      20% { transform: translate(8px, 6px) rotate(1deg); }
+      30% { transform: translate(-6px, 4px) rotate(0deg); }
+      40% { transform: translate(6px, -4px) rotate(1deg); }
+      50% { transform: translate(-4px, 6px) rotate(-1deg); }
+      60% { transform: translate(4px, -2px) rotate(0deg); }
+    }
+    .animate-battle-shake { animation: battle-shake 0.6s ease-in-out infinite; }
+  </style>
+</head>
+<body class="bg-ocean-950 text-slate-100 font-sans min-h-screen flex flex-col selection:bg-gold-500 selection:text-ocean-950 relative overflow-x-hidden">
+
+  <!-- Toast Notification Container -->
+  <div id="toast-container" class="fixed top-4 right-4 z-50 flex flex-col gap-2 pointer-events-none"></div>
+
+  <!-- Audio Synthesizer Engine (Web Audio API) -->
+  <script>
+    const AudioFX = {
+      ctx: null,
+      muted: false,
+      init() {
+        if (!this.ctx) {
+          const AudioContext = window.AudioContext || window.webkitAudioContext;
+          if (AudioContext) this.ctx = new AudioContext();
+        }
+      },
+      playDice() {
+        if (this.muted) return;
+        this.init(); if (!this.ctx) return;
+        const now = this.ctx.currentTime;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(360, now);
+        osc.frequency.exponentialRampToValueAtTime(110, now + 0.18);
+        gain.gain.setValueAtTime(0.35, now);
+        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.18);
+        osc.connect(gain); gain.connect(this.ctx.destination);
+        osc.start(now); osc.stop(now + 0.18);
+      },
+      playBell() {
+        if (this.muted) return;
+        this.init(); if (!this.ctx) return;
+        const now = this.ctx.currentTime;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(987.77, now);
+        gain.gain.setValueAtTime(0.45, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 1.2);
+        osc.connect(gain); gain.connect(this.ctx.destination);
+        osc.start(now); osc.stop(now + 1.2);
+      },
+      playSword() {
+        if (this.muted) return;
+        this.init(); if (!this.ctx) return;
+        const now = this.ctx.currentTime;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(1400, now);
+        osc.frequency.exponentialRampToValueAtTime(180, now + 0.15);
+        gain.gain.setValueAtTime(0.4, now);
+        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.15);
+        osc.connect(gain); gain.connect(this.ctx.destination);
+        osc.start(now); osc.stop(now + 0.15);
+      },
+      playBattleRoar() {
+        if (this.muted) return;
+        this.init(); if (!this.ctx) return;
+        const now = this.ctx.currentTime;
+        // Deep low brass/horn simulation
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(110, now);
+        osc.frequency.exponentialRampToValueAtTime(65, now + 0.8);
+        gain.gain.setValueAtTime(0.5, now);
+        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.8);
+        osc.connect(gain); gain.connect(this.ctx.destination);
+        osc.start(now); osc.stop(now + 0.8);
+      },
+      playFanfare() {
+        if (this.muted) return;
+        this.init(); if (!this.ctx) return;
+        const notes = [523.25, 659.25, 783.99, 1046.50];
+        notes.forEach((freq, idx) => {
+          const now = this.ctx.currentTime + (idx * 0.14);
+          const osc = this.ctx.createOscillator();
+          const gain = this.ctx.createGain();
+          osc.type = 'triangle';
+          osc.frequency.setValueAtTime(freq, now);
+          gain.gain.setValueAtTime(0.35, now);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.45);
+          osc.connect(gain); gain.connect(this.ctx.destination);
+          osc.start(now); osc.stop(now + 0.45);
+        });
+      }
+    };
+  </script>
+
+  <!-- LOBBY MODAL SCREEN -->
+  <div id="lobby-screen" class="fixed inset-0 z-50 bg-ocean-950/95 backdrop-blur-md flex items-center justify-center p-4 overflow-y-auto">
+    <div class="max-w-xl w-full parchment-bg text-parchment-900 rounded-2xl wood-border p-6 sm:p-8 shadow-2xl relative">
+      
+      <div class="text-center mb-6 border-b-2 border-parchment-800/20 pb-4">
+        <h1 class="font-pirate text-5xl sm:text-6xl text-pirateRed-700 drop-shadow-md tracking-wider">GRAND LINE VTT</h1>
+        <p class="font-heading text-xs sm:text-sm text-parchment-800 font-bold uppercase tracking-widest mt-1">Mesa Virtual de RPG • One Piece</p>
+      </div>
+
+      <!-- Room Detected Alert Banner -->
+      <div id="room-detected-banner" class="hidden mb-4 p-3 bg-pirateRed-800 text-parchment-100 rounded-lg border border-gold-500 text-xs font-heading font-bold flex items-center justify-between shadow">
+        <span><i class="fa-solid fa-anchor mr-2 text-gold-400"></i> Convite da Sala Detectado!</span>
+        <span id="detected-code-badge" class="font-mono bg-ocean-950 px-2 py-0.5 rounded text-gold-400"></span>
+      </div>
+
+      <!-- Mode Selector Tabs -->
+      <div class="flex rounded-lg bg-parchment-800/15 p-1 mb-6">
+        <button id="tab-join-btn" onclick="switchLobbyTab('join')" class="flex-1 py-2.5 font-heading font-bold text-sm rounded-md transition-all bg-pirateRed-700 text-white shadow">
+          <i class="fa-solid fa-user-plus mr-1"></i> Entrar na Tripulação
+        </button>
+        <button id="tab-create-btn" onclick="switchLobbyTab('create')" class="flex-1 py-2.5 font-heading font-bold text-sm rounded-md transition-all text-parchment-800 hover:bg-parchment-800/10">
+          <i class="fa-solid fa-crown mr-1"></i> Criar Sala (Mestre)
+        </button>
+      </div>
+
+      <!-- PLAYER JOIN FORM -->
+      <div id="join-form" class="space-y-4">
+        <div>
+          <label class="block font-heading text-xs font-bold uppercase mb-1 text-parchment-800">Código da Sala</label>
+          <div class="relative">
+            <input type="text" id="join-room-id" placeholder="Ex: OP-7392" class="w-full bg-parchment-100 border-2 border-parchment-800/40 rounded-lg py-2.5 px-3 pl-9 text-sm font-semibold uppercase tracking-wider focus:outline-none focus:border-pirateRed-700">
+            <i class="fa-solid fa-compass absolute left-3 top-3.5 text-parchment-800/50 text-xs"></i>
+          </div>
+        </div>
+
+        <div>
+          <label class="block font-heading text-xs font-bold uppercase mb-1 text-parchment-800">Nome do Personagem</label>
+          <input type="text" id="player-name" placeholder="Ex: Monkey D. Luffy" class="w-full bg-parchment-100 border-2 border-parchment-800/40 rounded-lg py-2.5 px-3 text-sm font-semibold focus:outline-none focus:border-pirateRed-700">
+        </div>
+
+        <div>
+          <label class="block font-heading text-xs font-bold uppercase mb-1 text-parchment-800">Foto do Personagem</label>
+          <div class="flex items-center gap-4">
+            <div class="w-20 h-20 rounded-lg border-2 border-dashed border-parchment-800/50 bg-parchment-100 flex items-center justify-center overflow-hidden relative shrink-0">
+              <img id="avatar-preview" class="w-full h-full object-cover hidden" alt="Avatar">
+              <i id="avatar-placeholder" class="fa-solid fa-user-ninja text-3xl text-parchment-800/40"></i>
+            </div>
+            <div class="flex-1">
+              <input type="file" id="avatar-input" accept="image/*" class="hidden" onchange="handleAvatarUpload(event)">
+              <button onclick="document.getElementById('avatar-input').click()" type="button" class="bg-parchment-800 hover:bg-parchment-900 text-parchment-100 font-heading text-xs py-2 px-3.5 rounded-lg shadow transition flex items-center gap-2">
+                <i class="fa-solid fa-upload"></i> Escolher Imagem
+              </button>
+              <p class="text-[10px] text-parchment-800/70 mt-1.5">Redimensionamento automático para salvar memória.</p>
+            </div>
+          </div>
+        </div>
+
+        <button id="join-submit-btn" onclick="joinRoomAsPlayer()" type="button" class="w-full mt-4 bg-gradient-to-r from-pirateRed-700 to-pirateRed-800 hover:from-pirateRed-600 hover:to-pirateRed-700 text-white font-pirate text-2xl py-3.5 rounded-xl shadow-lg border-2 border-gold-500/50 transition transform hover:-translate-y-0.5 active:translate-y-0 flex items-center justify-center gap-2">
+          <i class="fa-solid fa-ship"></i> ZARPAR! (ENTRAR NA TRIPULAÇÃO)
+        </button>
+      </div>
+
+      <!-- GM CREATE FORM -->
+      <div id="create-form" class="space-y-4 hidden">
+        <p class="text-xs text-parchment-800 leading-relaxed">
+          Como <span class="font-bold text-pirateRed-700">Mestre RPG</span>, você terá controle em tempo real sobre vidas, recompensas (฿), cenários, mapas, navio, dados secretos e eventos dramáticos de confronto.
+        </p>
+
+        <div>
+          <label class="block font-heading text-xs font-bold uppercase mb-1 text-parchment-800">Código / Nome da Sala (Opcional)</label>
+          <input type="text" id="create-room-name" placeholder="Deixe em branco para gerar automático (Ex: OP-7392)" class="w-full bg-parchment-100 border-2 border-parchment-800/40 rounded-lg py-2.5 px-3 text-sm font-semibold uppercase focus:outline-none focus:border-pirateRed-700">
+        </div>
+
+        <button id="create-submit-btn" onclick="createRoomAsGM()" type="button" class="w-full mt-2 bg-gradient-to-r from-gold-600 to-gold-700 hover:from-gold-500 hover:to-gold-600 text-ocean-950 font-pirate text-2xl py-3.5 rounded-xl shadow-lg border-2 border-parchment-800/40 transition transform hover:-translate-y-0.5 flex items-center justify-center gap-2">
+          <i class="fa-solid fa-crown"></i> CRIAR MESA DE JOGO (MESTRE)
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- MAIN APP NAVBAR -->
+  <header class="bg-ocean-900 border-b border-gold-600/40 px-4 py-3 sticky top-0 z-30 shadow-xl">
+    <div class="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-3">
+      
+      <!-- Brand & Network Status -->
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-full bg-pirateRed-700 flex items-center justify-center border-2 border-gold-400 text-gold-300 font-pirate text-2xl shadow">
+          <i class="fa-solid fa-skull-crossbones"></i>
+        </div>
+        <div>
+          <h1 class="font-pirate text-2xl text-gold-400 leading-none tracking-wide">GRAND LINE VTT</h1>
+          <div class="flex items-center gap-2 mt-0.5">
+            <span id="role-badge" class="px-2 py-0.5 text-[10px] font-heading font-bold rounded bg-ocean-800 text-slate-300 uppercase tracking-wider border border-slate-700">Aguardando...</span>
+            <span id="peer-status" class="text-[11px] text-slate-400 flex items-center gap-1">
+              <span class="w-2 h-2 rounded-full bg-yellow-500 inline-block animate-pulse"></span>
+              Inicializando...
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quick Action Tools (Notebook & GM Pings & Sound) -->
+      <div class="flex items-center gap-2">
+        <!-- Personal Notebook Button for Players/GM -->
+        <button onclick="openNotebookModal()" class="bg-ocean-800 hover:bg-ocean-700 text-gold-300 border border-gold-500/40 px-3 py-1.5 rounded-lg text-xs font-heading font-bold flex items-center gap-1.5 shadow transition">
+          <i class="fa-solid fa-book-bookmark text-gold-400"></i> Diário de Bordo
+        </button>
+
+        <button onclick="copyInviteLink()" class="bg-ocean-800 hover:bg-ocean-700 text-gold-400 border border-gold-600/40 px-3 py-1.5 rounded-lg text-xs font-heading font-bold flex items-center gap-1.5 transition">
+          <i class="fa-solid fa-link"></i> <span class="hidden sm:inline">Copiar Link</span>
+        </button>
+        
+        <button onclick="toggleMute()" id="sound-toggle-btn" class="bg-ocean-800 hover:bg-ocean-700 text-slate-300 p-2 rounded-lg text-xs border border-slate-700">
+          <i class="fa-solid fa-volume-high"></i>
+        </button>
+      </div>
+
+    </div>
+  </header>
+
+  <!-- GM ROOM INVITE BANNER (Shown to GM upon room creation) -->
+  <div id="gm-invite-banner" class="hidden bg-gradient-to-r from-ocean-900 via-ocean-800 to-ocean-900 border-b-2 border-gold-500 p-3.5 shadow-xl">
+    <div class="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-gold-500/20 border border-gold-500 flex items-center justify-center text-gold-400 text-xl shrink-0">
+          <i class="fa-solid fa-scroll"></i>
+        </div>
+        <div>
+          <h2 class="font-pirate text-2xl text-gold-400 leading-none">MESA DE JOGO PRONTA!</h2>
+          <p class="text-xs text-slate-300">Envie o código abaixo aos jogadores da sua tripulação.</p>
+        </div>
+      </div>
+
+      <div class="flex flex-wrap items-center gap-2 w-full md:w-auto">
+        <div class="bg-ocean-950 border border-gold-500/50 rounded-lg px-3 py-1.5 flex items-center gap-2 flex-1 md:flex-initial">
+          <span class="text-[10px] text-slate-400 font-heading uppercase">Código:</span>
+          <span id="banner-room-code" class="font-mono font-bold text-base text-gold-300">OP-XXXX</span>
+          <button onclick="copyRoomCodeOnly()" class="ml-2 bg-gold-600 hover:bg-gold-500 text-ocean-950 text-xs px-2.5 py-1 rounded font-heading font-bold shadow">
+            Copiar Código
+          </button>
+        </div>
+
+        <button onclick="copyInviteLink()" class="bg-pirateRed-700 hover:bg-pirateRed-600 text-white text-xs px-3.5 py-2 rounded-lg font-heading font-bold shadow border border-gold-500/40 flex items-center gap-2">
+          <i class="fa-solid fa-share-nodes"></i> Copiar Link Completo
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MAIN LAYOUT CONTAINER -->
+  <main class="flex-1 max-w-7xl w-full mx-auto p-3 sm:p-5 grid grid-cols-1 lg:grid-cols-12 gap-5">
+
+    <!-- LEFT / MAIN SECTION: Visual Stage, Dice Roller, Crew Grid (Cols 1-8) -->
+    <section class="lg:col-span-8 flex flex-col gap-5">
+
+      <!-- 3 ORGANIZED MEDIA PROJECTION AREAS -->
+      <div class="bg-ocean-900/90 rounded-2xl border-2 border-gold-600/40 p-4 shadow-2xl flex flex-col gap-4">
+        
+        <div class="flex items-center justify-between pb-2 border-b border-slate-700/80">
+          <div class="flex items-center gap-2">
+            <i class="fa-solid fa-images text-gold-400 text-lg"></i>
+            <h2 class="font-heading font-bold text-sm text-gold-300 uppercase tracking-wider">Mídia & Cenário da Tripulação</h2>
+          </div>
+          <span class="text-[11px] font-mono text-slate-400 bg-ocean-950/70 px-2 py-0.5 rounded border border-slate-700">Transmissão do Mestre</span>
+        </div>
+
+        <!-- STAGE GRID: 1 Main Large + 2 Side Medium/Small Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-12 gap-4">
+
+          <!-- 1) MAIN STAGE: Cenário & Oponente (Large - Cols 1-7) -->
+          <div class="md:col-span-7 flex flex-col gap-1.5">
+            <span class="text-xs font-heading font-bold text-gold-400 uppercase flex items-center gap-1.5">
+              <i class="fa-solid fa-location-dot"></i> 1. Cenário & Oponente (Grande)
+            </span>
+            <div id="stage-main-frame" class="w-full h-[280px] sm:h-[320px] bg-ocean-950/90 rounded-xl border border-slate-700 overflow-hidden relative group flex flex-col items-center justify-center shadow-inner">
+              <img id="stage-main-img" class="w-full h-full object-contain hidden" alt="Cenário e Inimigo">
+              <div id="stage-main-placeholder" class="text-center p-6 text-slate-500">
+                <i class="fa-solid fa-volcano text-5xl mb-2 text-slate-700"></i>
+                <p class="font-heading text-xs text-slate-400">Nenhum cenário ou oponente projetado.</p>
+              </div>
+              <div id="stage-main-caption-bar" class="absolute bottom-0 inset-x-0 bg-ocean-950/90 border-t border-gold-600/40 p-2 text-center hidden">
+                <p id="stage-main-caption-text" class="font-heading text-xs font-bold text-gold-300"></p>
+              </div>
+            </div>
+          </div>
+
+          <!-- RIGHT SIDE STACK: Mapa da Ilha & Barco da Tripulação (Cols 8-12) -->
+          <div class="md:col-span-5 flex flex-col gap-4">
+            
+            <!-- 2) MAPA DA ILHA (Medium) -->
+            <div class="flex flex-col gap-1.5 flex-1">
+              <div class="flex items-center justify-between">
+                <span class="text-xs font-heading font-bold text-gold-400 uppercase flex items-center gap-1.5">
+                  <i class="fa-solid fa-map"></i> 2. Mapa da Ilha (Médio)
+                </span>
+                <button id="zoom-map-btn" onclick="openMapZoomModal()" class="text-[10px] text-gold-400 hover:underline hidden">
+                  <i class="fa-solid fa-magnifying-glass-plus mr-1"></i> Ampliar Mapa
+                </button>
+              </div>
+              <div id="stage-map-frame" onclick="openMapZoomModal()" class="w-full h-[145px] bg-ocean-950/90 rounded-xl border border-slate-700 overflow-hidden relative cursor-pointer group flex flex-col items-center justify-center shadow-inner">
+                <img id="stage-map-img" class="w-full h-full object-cover hidden group-hover:scale-105 transition-all duration-300" alt="Mapa da Ilha">
+                <div id="stage-map-placeholder" class="text-center p-3 text-slate-500">
+                  <i class="fa-solid fa-map-location-dot text-3xl mb-1 text-slate-700"></i>
+                  <p class="font-heading text-[11px] text-slate-400">Sem Mapa da Ilha</p>
+                </div>
+                <div class="absolute inset-0 bg-ocean-950/40 opacity-0 group-hover:opacity-100 transition flex items-center justify-center text-gold-300 text-xs font-heading font-bold">
+                  <i class="fa-solid fa-expand mr-1.5"></i> Clique para Ampliar
+                </div>
+              </div>
+            </div>
+
+            <!-- 3) BARCO DA TRIPULAÇÃO (Small) -->
+            <div class="flex flex-col gap-1.5">
+              <span class="text-xs font-heading font-bold text-gold-400 uppercase flex items-center gap-1.5">
+                <i class="fa-solid fa-anchor"></i> 3. Barco da Tripulação (Pequeno)
+              </span>
+              <div id="stage-ship-frame" class="w-full h-[115px] bg-ocean-950/90 rounded-xl border border-slate-700 overflow-hidden relative flex items-center gap-3 p-2 shadow-inner">
+                <div class="w-24 h-full rounded-lg bg-ocean-900 border border-slate-800 overflow-hidden shrink-0 flex items-center justify-center">
+                  <img id="stage-ship-img" class="w-full h-full object-cover hidden" alt="Barco">
+                  <i id="stage-ship-placeholder-icon" class="fa-solid fa-ship text-3xl text-slate-700"></i>
+                </div>
+                <div class="flex-1 min-w-0">
+                  <span class="text-[9px] font-heading font-bold text-slate-500 uppercase tracking-wider block">Embarcação</span>
+                  <h4 id="stage-ship-name" class="font-pirate text-xl text-gold-300 truncate">Going Merry / Thousand Sunny</h4>
+                  <p id="stage-ship-status" class="text-[10px] text-slate-400 mt-0.5">Navio da Tripulação</p>
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+        </div>
+
+      </div>
+
+      <!-- CENTRAL PUBLIC DICE ROLLER -->
+      <div class="parchment-bg text-parchment-900 rounded-2xl wood-border p-5 shadow-2xl relative">
+        <div class="flex items-center justify-between mb-4 border-b-2 border-parchment-800/20 pb-2">
+          <div class="flex items-center gap-2">
+            <i class="fa-solid fa-dice-d20 text-pirateRed-700 text-3xl"></i>
+            <div>
+              <h2 class="font-pirate text-2xl text-pirateRed-800 leading-none">DADO CENTRAL DA TRIPULAÇÃO</h2>
+              <span id="dice-range-label" class="text-[11px] font-heading font-bold text-parchment-800/80">Intervalo: 1 a 20</span>
+            </div>
+          </div>
+          <span id="dice-turn-indicator" class="text-xs font-heading font-bold px-3 py-1 rounded-full bg-parchment-800/10 border border-parchment-800/30 text-parchment-800">
+            Livre para todos
+          </span>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 items-center">
+          
+          <!-- Last Result Display -->
+          <div class="flex flex-col items-center justify-center bg-parchment-100 rounded-xl p-4 border-2 border-parchment-800/30 text-center min-h-[130px] shadow-inner">
+            <span class="text-[10px] font-heading font-bold uppercase text-parchment-800/60 mb-1">Último Resultado</span>
+            <div id="dice-result-val" class="font-pirate text-6xl text-pirateRed-700 leading-none my-1">
+              --
+            </div>
+            <p id="dice-roller-name" class="font-heading text-xs font-bold text-parchment-800">
+              Aguardando giro...
+            </p>
+          </div>
+
+          <!-- Roll Button -->
+          <div class="flex flex-col gap-3 justify-center">
+            <button id="roll-central-btn" onclick="requestCentralRoll()" class="w-full bg-gradient-to-r from-pirateRed-700 to-pirateRed-800 hover:from-pirateRed-600 hover:to-pirateRed-700 text-white font-pirate text-3xl py-4 rounded-xl shadow-lg border-2 border-gold-500/50 transition transform hover:scale-[1.02] active:scale-95 flex items-center justify-center gap-3">
+              <i class="fa-solid fa-dice-three text-gold-400"></i> GIRAR DADO!
+            </button>
+            <p id="roll-lock-notice" class="text-[11px] text-center font-semibold text-pirateRed-800 hidden">
+              <i class="fa-solid fa-lock mr-1"></i> Giro restrito pelo Mestre no momento.
+            </p>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- PLAYERS / CREW WANTED POSTER GRID -->
+      <div class="bg-ocean-900/90 rounded-2xl border-2 border-gold-600/40 p-4 shadow-xl">
+        <div class="flex items-center justify-between mb-4 pb-2 border-b border-slate-700">
+          <div class="flex items-center gap-2">
+            <i class="fa-solid fa-users text-gold-400 text-lg"></i>
+            <h2 class="font-heading font-bold text-sm text-gold-300 uppercase tracking-wider">Tripulantes em Campo (<span id="crew-count">0</span>)</h2>
+          </div>
+        </div>
+
+        <div id="players-grid" class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5">
+          <!-- Dynamic Wanted Cards Injected Here -->
+        </div>
+      </div>
+
+    </section>
+
+    <!-- RIGHT SECTION: GM Controls OR Player Guide (Cols 9-12) -->
+    <aside class="lg:col-span-4 flex flex-col gap-5">
+
+      <!-- GM CONTROL PANEL (Visible ONLY to GM Host) -->
+      <div id="gm-panel" class="bg-ocean-900 border-2 border-gold-500 rounded-2xl p-4 shadow-2xl space-y-4 hidden">
+        <div class="flex items-center justify-between border-b border-gold-500/30 pb-3">
+          <div class="flex items-center gap-2 text-gold-400">
+            <i class="fa-solid fa-crown text-xl"></i>
+            <h2 class="font-pirate text-2xl tracking-wide">PAINEL DO MESTRE RPG</h2>
+          </div>
+          <span class="text-[10px] font-heading bg-gold-500/20 text-gold-300 border border-gold-500/40 px-2 py-0.5 rounded">Host</span>
+        </div>
+
+        <!-- GM TOOL TABS -->
+        <div class="flex flex-wrap rounded-lg bg-ocean-950 p-1 border border-slate-700 text-xs font-heading font-bold gap-1">
+          <button onclick="switchGmTab('players')" id="gmtab-btn-players" class="flex-1 py-1.5 px-2 rounded text-gold-400 bg-ocean-800 shadow">
+            Tripulação
+          </button>
+          <button onclick="switchGmTab('media')" id="gmtab-btn-media" class="flex-1 py-1.5 px-2 rounded text-slate-400 hover:text-slate-200">
+            Mídia
+          </button>
+          <button onclick="switchGmTab('events')" id="gmtab-btn-events" class="flex-1 py-1.5 px-2 rounded text-slate-400 hover:text-slate-200">
+            Eventos
+          </button>
+          <button onclick="switchGmTab('dice')" id="gmtab-btn-dice" class="flex-1 py-1.5 px-2 rounded text-slate-400 hover:text-slate-200">
+            Dados
+          </button>
+          <button onclick="switchGmTab('npc')" id="gmtab-btn-npc" class="flex-1 py-1.5 px-2 rounded text-slate-400 hover:text-slate-200">
+            Inimigos
+          </button>
+          <button onclick="switchGmTab('script')" id="gmtab-btn-script" class="flex-1 py-1.5 px-2 rounded text-slate-400 hover:text-slate-200">
+            Roteiro
+          </button>
+        </div>
+
+        <!-- TAB 1: GM PLAYER MANAGEMENT (HP, NEGATIVE HP, BOUNTY EDITOR, STATUS INCLUDING LAW ROOM) -->
+        <div id="gmtab-players" class="space-y-4">
+          <h3 class="text-xs font-heading font-bold text-slate-300 uppercase">Vida, Recompensa (฿) & Status dos Jogadores</h3>
+          
+          <div id="gm-players-list" class="space-y-3.5 max-h-[460px] overflow-y-auto pr-1">
+            <p class="text-xs text-slate-500 italic text-center py-4">Aguardando entrada de tripulantes...</p>
+          </div>
+        </div>
+
+        <!-- TAB 2: MEDIA & VISUAL PROJECTIONS (Cenário, Mapa da Ilha, Barco) -->
+        <div id="gmtab-media" class="space-y-4 hidden">
+          <h3 class="text-xs font-heading font-bold text-gold-400 uppercase">Enviar Mídia para os 3 Espaços Visualizadores</h3>
+          
+          <!-- Slot 1: Cenário & Oponente (Grande) -->
+          <div class="bg-ocean-950 p-3 rounded-xl border border-slate-700 space-y-2">
+            <span class="text-xs font-heading font-bold text-slate-200 block">1. Cenário & Oponente (Grande)</span>
+            <input type="text" id="gm-main-caption" placeholder="Legenda (Ex: Kaido - Forma Dragão)" class="w-full bg-ocean-900 border border-slate-700 rounded px-2 py-1.5 text-xs text-slate-100">
+            <input type="file" id="gm-main-file" accept="image/*" class="hidden" onchange="handleMediaUpload(event, 'main')">
+            <div class="flex gap-2">
+              <button onclick="document.getElementById('gm-main-file').click()" class="flex-1 bg-ocean-800 hover:bg-ocean-700 border border-slate-600 text-slate-200 text-xs py-1.5 rounded">
+                <i class="fa-solid fa-upload mr-1"></i> Foto
+              </button>
+              <button onclick="clearMedia('main')" class="bg-red-950 hover:bg-red-900 text-red-300 px-3 py-1.5 text-xs rounded border border-red-800">
+                Limpar
+              </button>
+            </div>
+          </div>
+
+          <!-- Slot 2: Mapa da Ilha (Médio) -->
+          <div class="bg-ocean-950 p-3 rounded-xl border border-slate-700 space-y-2">
+            <span class="text-xs font-heading font-bold text-slate-200 block">2. Mapa da Ilha (Médio)</span>
+            <input type="file" id="gm-map-file" accept="image/*" class="hidden" onchange="handleMediaUpload(event, 'map')">
+            <div class="flex gap-2">
+              <button onclick="document.getElementById('gm-map-file').click()" class="flex-1 bg-ocean-800 hover:bg-ocean-700 border border-slate-600 text-slate-200 text-xs py-1.5 rounded">
+                <i class="fa-solid fa-map mr-1"></i> Carregar Mapa
+              </button>
+              <button onclick="clearMedia('map')" class="bg-red-950 hover:bg-red-900 text-red-300 px-3 py-1.5 text-xs rounded border border-red-800">
+                Limpar
+              </button>
+            </div>
+          </div>
+
+          <!-- Slot 3: Barco da Tripulação (Pequeno) -->
+          <div class="bg-ocean-950 p-3 rounded-xl border border-slate-700 space-y-2">
+            <span class="text-xs font-heading font-bold text-slate-200 block">3. Barco da Tripulação (Pequeno)</span>
+            <input type="text" id="gm-ship-name-input" placeholder="Nome do Barco (Ex: Thousand Sunny)" class="w-full bg-ocean-900 border border-slate-700 rounded px-2 py-1.5 text-xs text-slate-100">
+            <input type="file" id="gm-ship-file" accept="image/*" class="hidden" onchange="handleMediaUpload(event, 'ship')">
+            <div class="flex gap-2">
+              <button onclick="document.getElementById('gm-ship-file').click()" class="flex-1 bg-ocean-800 hover:bg-ocean-700 border border-slate-600 text-slate-200 text-xs py-1.5 rounded">
+                <i class="fa-solid fa-ship mr-1"></i> Foto do Navio
+              </button>
+              <button onclick="clearMedia('ship')" class="bg-red-950 hover:bg-red-900 text-red-300 px-3 py-1.5 text-xs rounded border border-red-800">
+                Limpar
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- TAB 3: GM DRAMATIC EVENTS & SOUNDBOARD -->
+        <div id="gmtab-events" class="space-y-4 hidden">
+          <h3 class="text-xs font-heading font-bold text-gold-400 uppercase">Eventos Dramáticos na Tela de Todos</h3>
+          
+          <div class="space-y-2.5">
+            <!-- Event 1: Confronto Iniciado -->
+            <button onclick="triggerBattleConfrontationEvent()" class="w-full bg-gradient-to-r from-pirateRed-800 to-pirateRed-900 hover:from-pirateRed-700 hover:to-pirateRed-800 text-white border border-gold-500/50 py-3 rounded-xl font-heading font-bold text-xs shadow-lg flex items-center justify-center gap-2">
+              <i class="fa-solid fa-skull-crossbones text-gold-400 text-lg animate-pulse"></i> ⚔️ Iniciar Confronto / Batalha!
+            </button>
+
+            <!-- Event 2: Fim da Sessão -->
+            <button onclick="triggerSessionEndEvent()" class="w-full bg-gradient-to-r from-gold-600 to-gold-700 hover:from-gold-500 hover:to-gold-600 text-ocean-950 border border-parchment-800/40 py-3 rounded-xl font-pirate text-xl shadow-lg flex items-center justify-center gap-2">
+              <i class="fa-solid fa-scroll text-lg"></i> 📜 Fim da Sessão (TO BE CONTINUED...)
+            </button>
+          </div>
+
+          <!-- Soundboard -->
+          <div class="border-t border-slate-800 pt-3 space-y-2">
+            <span class="text-[10px] font-heading font-bold text-slate-400 block uppercase">Efeitos Sonoros Rápidos</span>
+            <div class="grid grid-cols-2 gap-2">
+              <button onclick="AudioFX.playBell(); sendGmPing();" class="bg-ocean-950 hover:bg-ocean-800 text-gold-400 border border-gold-600/40 py-2 px-2 rounded text-xs font-heading font-bold">
+                🔔 Sino de Alerta
+              </button>
+              <button onclick="AudioFX.playSword()" class="bg-ocean-950 hover:bg-ocean-800 text-red-400 border border-red-600/40 py-2 px-2 rounded text-xs font-heading font-bold">
+                ⚔️ Golpe de Espada
+              </button>
+              <button onclick="AudioFX.playBattleRoar()" class="bg-ocean-950 hover:bg-ocean-800 text-purple-400 border border-purple-600/40 py-2 px-2 rounded text-xs font-heading font-bold">
+                🎺 Horn de Batalha
+              </button>
+              <button onclick="AudioFX.playFanfare()" class="bg-ocean-950 hover:bg-ocean-800 text-green-400 border border-green-600/40 py-2 px-2 rounded text-xs font-heading font-bold">
+                🎺 Vitória / Fanfarra
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- TAB 4: DICE CONFIG & PRIVATE SECRET GM DICE -->
+        <div id="gmtab-dice" class="space-y-4 hidden">
+          <!-- Central Dice Config -->
+          <div class="bg-ocean-950 rounded-xl p-3 border border-slate-700 space-y-3">
+            <h3 class="text-xs font-heading font-bold text-gold-400 uppercase">Configurar Dado Central público</h3>
+            
+            <div class="grid grid-cols-2 gap-2">
+              <div>
+                <label class="text-[10px] text-slate-400 block mb-0.5">Mínimo</label>
+                <input type="number" id="gm-dice-min" value="1" class="w-full bg-ocean-800 border border-slate-700 rounded px-2 py-1 text-xs text-slate-100">
+              </div>
+              <div>
+                <label class="text-[10px] text-slate-400 block mb-0.5">Máximo (ex: 20, 80, 200)</label>
+                <input type="number" id="gm-dice-max" value="20" class="w-full bg-ocean-800 border border-slate-700 rounded px-2 py-1 text-xs text-slate-100">
+              </div>
+            </div>
+
+            <div class="flex flex-wrap gap-1.5">
+              <button onclick="setDicePreset(1, 20)" class="px-2 py-1 bg-ocean-800 hover:bg-ocean-700 rounded text-[10px] font-mono border border-slate-700">1-20</button>
+              <button onclick="setDicePreset(1, 80)" class="px-2 py-1 bg-ocean-800 hover:bg-ocean-700 rounded text-[10px] font-mono border border-slate-700">1-80</button>
+              <button onclick="setDicePreset(1, 100)" class="px-2 py-1 bg-ocean-800 hover:bg-ocean-700 rounded text-[10px] font-mono border border-slate-700">1-100</button>
+            </div>
+
+            <button onclick="applyDiceConfig()" class="w-full bg-gold-600 hover:bg-gold-500 text-ocean-950 font-heading text-xs font-bold py-1.5 rounded">
+              Atualizar Dado Central
+            </button>
+
+            <div class="border-t border-slate-800 pt-2 space-y-2">
+              <label class="text-[10px] text-slate-400 block">Permissão de Giro</label>
+              <select id="gm-grant-turn-select" onchange="changeDicePermission(this.value)" class="w-full bg-ocean-800 border border-slate-700 rounded px-2 py-1 text-xs text-slate-200">
+                <option value="ALL">Liberado para Todos</option>
+                <option value="GM_ONLY">Apenas Mestre Pode Girar</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Secret GM Dice -->
+          <div class="bg-pirateRed-950/40 rounded-xl p-3 border border-pirateRed-700/50 space-y-3">
+            <div class="flex items-center justify-between">
+              <h3 class="text-xs font-heading font-bold text-pirateRed-400 uppercase flex items-center gap-1.5">
+                <i class="fa-solid fa-user-secret"></i> Dado Oculto do Mestre
+              </h3>
+              <span class="text-[9px] text-pirateRed-300 bg-pirateRed-900/60 px-1.5 py-0.5 rounded">Privado</span>
+            </div>
+
+            <div class="flex items-center gap-2">
+              <input type="number" id="gm-secret-max" value="20" placeholder="Lados" class="w-20 bg-ocean-950 border border-pirateRed-800/60 rounded px-2 py-1 text-xs text-center text-slate-100">
+              <button onclick="rollSecretDice()" class="flex-1 bg-pirateRed-700 hover:bg-pirateRed-600 text-white font-heading text-xs font-bold py-2 rounded shadow flex items-center justify-center gap-2">
+                <i class="fa-solid fa-dice"></i> Girar Dado Secreto
+              </button>
+            </div>
+
+            <div class="bg-ocean-950 rounded p-2 text-center border border-pirateRed-900/60 min-h-[48px] flex flex-col justify-center">
+              <span class="text-[10px] text-slate-400">Resultado Secreto:</span>
+              <span id="secret-roll-val" class="font-pirate text-3xl text-gold-400 leading-none">--</span>
+            </div>
+
+            <div class="text-[10px] text-slate-400 space-y-0.5 font-mono max-h-20 overflow-y-auto" id="secret-roll-log"></div>
+          </div>
+        </div>
+
+        <!-- TAB 5: NPC / ENEMY TRACKER -->
+        <div id="gmtab-npc" class="space-y-3 hidden">
+          <h3 class="text-xs font-heading font-bold text-gold-400 uppercase">Rastreio de Inimigos / NPCs</h3>
+
+          <div class="bg-ocean-950 p-2.5 rounded-xl border border-slate-700 space-y-2">
+            <input type="text" id="npc-name-input" placeholder="Nome do Inimigo (Ex: Marinha Kizaru)" class="w-full bg-ocean-800 border border-slate-700 rounded px-2 py-1 text-xs">
+            <div class="flex gap-2">
+              <input type="number" id="npc-hp-input" placeholder="Vida (HP)" class="w-1/2 bg-ocean-800 border border-slate-700 rounded px-2 py-1 text-xs">
+              <button onclick="addNpcEnemy()" class="w-1/2 bg-pirateRed-700 hover:bg-pirateRed-600 text-white font-heading text-xs font-bold py-1 rounded">
+                + Adicionar Inimigo
+              </button>
+            </div>
+          </div>
+
+          <div id="gm-npc-list" class="space-y-2 max-h-[300px] overflow-y-auto">
+            <p class="text-xs text-slate-500 italic text-center py-3">Nenhum inimigo em combate.</p>
+          </div>
+        </div>
+
+        <!-- TAB 6: PRIVATE GM SCRIPT -->
+        <div id="gmtab-script" class="space-y-3 hidden">
+          <div class="flex items-center justify-between">
+            <h3 class="text-xs font-heading font-bold text-gold-400 uppercase">Roteiro Privado do Mestre</h3>
+            <span class="text-[10px] text-slate-400">Salvo no Navegador</span>
+          </div>
+          <textarea id="gm-notes-textarea" oninput="saveGmNotes()" placeholder="Escreva aqui os detalhes da aventura, fraquezas de chefões e tesouros escondidos..." class="w-full h-64 bg-ocean-950 border border-slate-700 rounded-xl p-3 text-xs text-slate-200 font-mono focus:outline-none focus:border-gold-500 leading-relaxed resize-none"></textarea>
+        </div>
+      </div>
+
+      <!-- PLAYER GUIDE CARD -->
+      <div id="player-guide-panel" class="bg-ocean-900 border border-gold-600/30 rounded-2xl p-4 shadow-xl space-y-3">
+        <div class="flex items-center gap-2 text-gold-400">
+          <i class="fa-solid fa-scroll text-lg"></i>
+          <h2 class="font-heading font-bold text-sm uppercase">Guia do Tripulante</h2>
+        </div>
+        <p class="text-xs text-slate-300 leading-relaxed">
+          Suas informações e barra de vida são atualizadas em tempo real pelo Mestre RPG.
+        </p>
+        <button onclick="openNotebookModal()" class="w-full bg-gradient-to-r from-gold-600 to-gold-700 hover:from-gold-500 hover:to-gold-600 text-ocean-950 font-heading font-bold text-xs py-2.5 rounded-xl shadow flex items-center justify-center gap-2">
+          <i class="fa-solid fa-book-bookmark"></i> Abrir Meu Diário de Bordo
+        </button>
+      </div>
+
+    </aside>
+  </main>
+
+  <!-- MODAL: PERSONAL PLAYER NOTEBOOK ("Diário de Bordo Pessoal") -->
+  <div id="notebook-modal" class="fixed inset-0 z-50 bg-ocean-950/90 backdrop-blur-md flex items-center justify-center p-4 hidden">
+    <div class="max-w-2xl w-full parchment-bg text-parchment-900 rounded-2xl wood-border p-6 shadow-2xl relative flex flex-col max-h-[90vh]">
+      
+      <div class="flex items-center justify-between border-b-2 border-parchment-800/20 pb-3 mb-4">
+        <div class="flex items-center gap-2">
+          <i class="fa-solid fa-book-bookmark text-pirateRed-700 text-2xl"></i>
+          <div>
+            <h2 class="font-pirate text-3xl text-pirateRed-800 leading-none">DIÁRIO DE BORDO PESSOAL</h2>
+            <p class="text-[10px] font-heading font-bold text-parchment-800/70">Anotações salvas no seu navegador</p>
+          </div>
+        </div>
+        <button onclick="closeNotebookModal()" class="text-parchment-800 hover:text-pirateRed-700 text-2xl font-bold px-2">
+          &times;
+        </button>
+      </div>
+
+      <!-- Notebook Tabs -->
+      <div class="flex rounded-lg bg-parchment-800/15 p-1 mb-4 text-xs font-heading font-bold gap-1">
+        <button onclick="switchNotebookTab('items')" id="nbtab-btn-items" class="flex-1 py-2 rounded bg-pirateRed-700 text-white shadow">
+          🎒 Inventário & Itens
+        </button>
+        <button onclick="switchNotebookTab('npcs')" id="nbtab-btn-npcs" class="flex-1 py-2 rounded text-parchment-800 hover:bg-parchment-800/10">
+          👥 Pessoas Conhecidas
+        </button>
+        <button onclick="switchNotebookTab('notes')" id="nbtab-btn-notes" class="flex-1 py-2 rounded text-parchment-800 hover:bg-parchment-800/10">
+          📝 Anotações & Objetivos
+        </button>
+      </div>
+
+      <!-- Notebook Tab Content Areas -->
+      <div class="flex-1 overflow-y-auto pr-1 space-y-3">
+        <!-- 1. Inventory & Items -->
+        <div id="nbtab-items" class="space-y-2">
+          <label class="block text-xs font-heading font-bold uppercase text-parchment-800">Seus Itens, Armas, Berries & Akuma no Mi</label>
+          <textarea id="nb-input-items" oninput="savePersonalNotebook()" placeholder="- Espada Meito&#10;- Log Pose da Grand Line&#10;- Dials de Skypiea..." class="w-full h-60 bg-parchment-100 border-2 border-parchment-800/30 rounded-xl p-3 text-xs font-mono text-parchment-900 focus:outline-none focus:border-pirateRed-700 leading-relaxed resize-none"></textarea>
+        </div>
+
+        <!-- 2. NPCs Known -->
+        <div id="nbtab-npcs" class="space-y-2 hidden">
+          <label class="block text-xs font-heading font-bold uppercase text-parchment-800">Aliados, Inimigos & Contatos Encontrados</label>
+          <textarea id="nb-input-npcs" oninput="savePersonalNotebook()" placeholder="- Silvers Rayleigh (Treinador)&#10;- Capitão Smoker (Marinha perseguindo a tripulação)&#10;- Ferreiro de Wano..." class="w-full h-60 bg-parchment-100 border-2 border-parchment-800/30 rounded-xl p-3 text-xs font-mono text-parchment-900 focus:outline-none focus:border-pirateRed-700 leading-relaxed resize-none"></textarea>
+        </div>
+
+        <!-- 3. Notes & Clues -->
+        <div id="nbtab-notes" class="space-y-2 hidden">
+          <label class="block text-xs font-heading font-bold uppercase text-parchment-800">Pistas de Poneglyphs, Missões & Segredos</label>
+          <textarea id="nb-input-notes" oninput="savePersonalNotebook()" placeholder="- Encontrar o Poneglyph Vermelho em Egghead&#10;- Segredo do Século Perdido..." class="w-full h-60 bg-parchment-100 border-2 border-parchment-800/30 rounded-xl p-3 text-xs font-mono text-parchment-900 focus:outline-none focus:border-pirateRed-700 leading-relaxed resize-none"></textarea>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- MODAL: FULLSCREEN MAP ZOOM INSPECTION -->
+  <div id="map-zoom-modal" class="fixed inset-0 z-50 bg-ocean-950/95 backdrop-blur-md flex items-center justify-center p-4 hidden">
+    <div class="max-w-5xl w-full bg-ocean-900 rounded-2xl border-2 border-gold-500 p-4 shadow-2xl relative flex flex-col max-h-[92vh]">
+      <div class="flex items-center justify-between pb-3 border-b border-slate-700">
+        <div class="flex items-center gap-2 text-gold-400 font-heading font-bold text-sm">
+          <i class="fa-solid fa-map-location-dot"></i> Inspeção Detalhada do Mapa da Ilha
+        </div>
+        <button onclick="closeMapZoomModal()" class="text-slate-400 hover:text-gold-400 text-2xl font-bold px-2">
+          &times;
+        </button>
+      </div>
+      <div class="flex-1 overflow-auto mt-3 flex items-center justify-center bg-ocean-950 rounded-xl p-2 border border-slate-800">
+        <img id="map-zoom-img" class="max-w-full max-h-[75vh] object-contain rounded-lg" alt="Mapa Expandido">
+      </div>
+    </div>
+  </div>
+
+  <!-- DRAMATIC GM EVENT OVERLAY 1: CONFRONTO INICIADO! -->
+  <div id="event-confrontation-overlay" class="fixed inset-0 z-50 bg-black/90 backdrop-blur-md flex flex-col items-center justify-center p-4 hidden">
+    <div class="animate-battle-shake text-center space-y-4 max-w-xl">
+      <div class="text-red-600 text-8xl drop-shadow-[0_0_35px_rgba(220,38,38,0.9)] animate-bounce">
+        <i class="fa-solid fa-skull-crossbones"></i>
+      </div>
+      <h1 class="font-pirate text-6xl sm:text-7xl text-gold-400 tracking-wider drop-shadow-lg uppercase">CONFRONTO INICIADO!</h1>
+      <p class="font-heading text-lg text-red-500 font-bold uppercase tracking-widest bg-red-950/80 px-4 py-1.5 rounded-full border border-red-700 inline-block shadow-lg">
+        Preparem-se para a Batalha!
+      </p>
+    </div>
+    <button onclick="closeConfrontationEvent()" class="mt-8 bg-gold-600 hover:bg-gold-500 text-ocean-950 font-heading font-bold px-6 py-2.5 rounded-xl shadow-2xl border border-parchment-800 transition">
+      Fechar Alerta de Batalha
+    </button>
+  </div>
+
+  <!-- DRAMATIC GM EVENT OVERLAY 2: FIM DA SESSÃO / TO BE CONTINUED -->
+  <div id="event-session-end-overlay" class="fixed inset-0 z-50 bg-ocean-950/95 backdrop-blur-lg flex flex-col items-center justify-center p-4 hidden">
+    <div class="max-w-2xl w-full text-center space-y-6">
+      <div class="font-pirate text-7xl sm:text-8xl text-gold-400 drop-shadow-[0_10px_20px_rgba(234,179,8,0.4)]">
+        GRAND LINE VTT
+      </div>
+      
+      <!-- Classic One Piece Style Arrow Box -->
+      <div class="bg-gradient-to-r from-pirateRed-800 via-pirateRed-700 to-pirateRed-800 text-white parchment-bg border-4 border-parchment-800 p-6 rounded-2xl shadow-2xl relative inline-block">
+        <h2 class="font-pirate text-4xl sm:text-5xl text-pirateRed-900 tracking-widest uppercase">
+          TO BE CONTINUED...
+        </h2>
+        <p class="font-heading text-sm text-parchment-900 font-bold uppercase tracking-widest mt-1">
+          Fim da Sessão — Continua na Próxima Aventura!
+        </p>
+      </div>
+
+      <div>
+        <button onclick="closeSessionEndEvent()" class="bg-gold-600 hover:bg-gold-500 text-ocean-950 font-heading font-bold px-8 py-3 rounded-xl shadow-2xl border-2 border-parchment-800 transition text-sm">
+          Retornar à Mesa
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- JAVASCRIPT ENGINE -->
+  <script>
+    // HYBRID NETWORK ENGINE (PeerJS WebRTC + BroadcastChannel Sandbox Fallback)
+    const PEER_CONFIG = {
+      config: {
+        iceServers: [
+          { urls: 'stun:stun.l.google.com:19302' },
+          { urls: 'stun:stun1.l.google.com:19302' }
+        ]
+      }
+    };
+
+    let isGM = false;
+    let peer = null;
+    let roomId = null;
+    let connections = {};
+    let gmConnection = null;
+    
+    let broadcastChannel = null;
+    let isLocalFallback = false;
+
+    let myPlayerInfo = {
+      id: null,
+      name: '',
+      avatar: '',
+      hp: 100,
+      maxHp: 100,
+      bounty: 1000000,
+      status: []
+    };
+
+    let gameState = {
+      media: {
+        main: { img: null, caption: '' },
+        map: { img: null },
+        ship: { img: null, name: 'Going Merry' }
+      },
+      diceConfig: { min: 1, max: 20 },
+      dicePermission: 'ALL',
+      lastRoll: { value: null, rollerName: 'Ninguém' },
+      players: {}
+    };
+
+    let npcs = [];
+
+    // INITIALIZATION & URL PARSING
+    window.addEventListener('DOMContentLoaded', () => {
+      const urlParams = new URLSearchParams(window.location.search);
+      const roomParam = urlParams.get('sala') || urlParams.get('room');
+
+      if (roomParam) {
+        document.getElementById('join-room-id').value = roomParam.toUpperCase();
+        document.getElementById('detected-code-badge').innerText = roomParam.toUpperCase();
+        document.getElementById('room-detected-banner').classList.remove('hidden');
+        switchLobbyTab('join');
+      }
+
+      const savedNotes = localStorage.getItem('grandline_gm_script');
+      if (savedNotes) {
+        document.getElementById('gm-notes-textarea').value = savedNotes;
+      }
+
+      loadPersonalNotebook();
+    });
+
+    // LOBBY TAB SWITCHING
+    function switchLobbyTab(tab) {
+      const joinForm = document.getElementById('join-form');
+      const createForm = document.getElementById('create-form');
+      const joinBtn = document.getElementById('tab-join-btn');
+      const createBtn = document.getElementById('tab-create-btn');
+
+      if (tab === 'join') {
+        joinForm.classList.remove('hidden');
+        createForm.classList.add('hidden');
+        joinBtn.className = "flex-1 py-2.5 font-heading font-bold text-sm rounded-md transition-all bg-pirateRed-700 text-white shadow";
+        createBtn.className = "flex-1 py-2.5 font-heading font-bold text-sm rounded-md transition-all text-parchment-800 hover:bg-parchment-800/10";
+      } else {
+        createForm.classList.remove('hidden');
+        joinForm.classList.add('hidden');
+        createBtn.className = "flex-1 py-2.5 font-heading font-bold text-sm rounded-md transition-all bg-pirateRed-700 text-white shadow";
+        joinBtn.className = "flex-1 py-2.5 font-heading font-bold text-sm rounded-md transition-all text-parchment-800 hover:bg-parchment-800/10";
+      }
+    }
+
+    // AVATAR UPLOAD WITH CANVAS COMPRESSION
+    function handleAvatarUpload(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      compressImage(file, 260, 0.75, (base64) => {
+        myPlayerInfo.avatar = base64;
+        const preview = document.getElementById('avatar-preview');
+        const placeholder = document.getElementById('avatar-placeholder');
+        preview.src = base64;
+        preview.classList.remove('hidden');
+        placeholder.classList.add('hidden');
+      });
+    }
+
+    function compressImage(file, maxWidth, quality, callback) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const img = new Image();
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          let width = img.width;
+          let height = img.height;
+
+          if (width > maxWidth) {
+            height = Math.round((height * maxWidth) / width);
+            width = maxWidth;
+          }
+
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, width, height);
+          callback(canvas.toDataURL('image/jpeg', quality));
+        };
+        img.src = e.target.result;
+      };
+      reader.readAsDataURL(file);
+    }
+
+    // CREATE ROOM AS GM
+    function createRoomAsGM() {
+      const inputCode = document.getElementById('create-room-name').value.trim().toUpperCase();
+      const cleanRandom = 'OP-' + Math.floor(1000 + Math.random() * 9000);
+      roomId = inputCode ? (inputCode.startsWith('OP-') || inputCode.startsWith('GRAND-') ? inputCode : 'OP-' + inputCode) : cleanRandom;
+
+      isGM = true;
+
+      try {
+        peer = new Peer(roomId, PEER_CONFIG);
+
+        peer.on('open', (id) => {
+          roomId = id;
+          setupGMInterface();
+          showToast('Sala de Mestre Criada!', 'success');
+        });
+
+        peer.on('connection', (conn) => {
+          conn.on('open', () => {
+            connections[conn.peer] = conn;
+            showToast('Um tripulante conectou à mesa!', 'info');
+          });
+
+          conn.on('data', (data) => {
+            handleGmIncomingData(conn.peer, data);
+          });
+
+          conn.on('close', () => {
+            delete connections[conn.peer];
+            delete gameState.players[conn.peer];
+            broadcastState();
+            renderPlayers();
+            renderGmPlayers();
+            updateGmTurnSelectOptions();
+            showToast('Tripulante desconectou.', 'warning');
+          });
+        });
+
+        peer.on('error', (err) => {
+          console.warn('PeerJS fallback triggered due to error:', err);
+          activateLocalFallback();
+        });
+
+      } catch (e) {
+        console.warn('PeerJS blocked by Sandbox. Using BroadcastChannel fallback.', e);
+        activateLocalFallback();
+      }
+    }
+
+    // BROADCASTCHANNEL FALLBACK
+    function activateLocalFallback() {
+      isLocalFallback = true;
+      initBroadcastChannel();
+
+      if (isGM) {
+        setupGMInterface();
+        updatePeerStatus('Modo Prévia/Local (Online)', 'bg-yellow-500');
+        showToast('Sala criada em Modo Local!', 'info');
+      }
+    }
+
+    function initBroadcastChannel() {
+      if (broadcastChannel) return;
+      try {
+        broadcastChannel = new BroadcastChannel('OP_RPG_' + roomId);
+        broadcastChannel.onmessage = (event) => {
+          const { senderId, payload } = event.data || {};
+          if (isGM) {
+            handleGmIncomingData(senderId, payload);
+          } else {
+            handlePlayerIncomingData(payload);
+          }
+        };
+      } catch (e) {
+        console.error('BroadcastChannel failed:', e);
+      }
+    }
+
+    function setupGMInterface() {
+      document.getElementById('lobby-screen').classList.add('hidden');
+      document.getElementById('gm-panel').classList.remove('hidden');
+      document.getElementById('player-guide-panel').classList.add('hidden');
+      
+      document.getElementById('gm-invite-banner').classList.remove('hidden');
+      document.getElementById('banner-room-code').innerText = roomId;
+
+      updateRoleBadge('Mestre RPG', 'bg-gold-500 text-ocean-950 font-bold');
+      if (!isLocalFallback) {
+        updatePeerStatus('Sala: ' + roomId, 'bg-green-500');
+      }
+    }
+
+    // JOIN ROOM AS PLAYER
+    function joinRoomAsPlayer() {
+      const targetRoom = document.getElementById('join-room-id').value.trim().toUpperCase();
+      const pName = document.getElementById('player-name').value.trim();
+
+      if (!targetRoom) {
+        showToast('Digite o código da sala!', 'warning');
+        return;
+      }
+      if (!pName) {
+        showToast('Digite o nome do seu personagem!', 'warning');
+        return;
+      }
+
+      roomId = targetRoom;
+      myPlayerInfo.name = pName;
+      if (!myPlayerInfo.avatar) {
+        myPlayerInfo.avatar = 'https://placehold.co/200x200/2c1c0d/f5e8c7?text=' + encodeURIComponent(pName.charAt(0));
+      }
+
+      isGM = false;
+
+      try {
+        peer = new Peer(PEER_CONFIG);
+
+        peer.on('open', (id) => {
+          myPlayerInfo.id = id;
+          gmConnection = peer.connect(roomId);
+
+          gmConnection.on('open', () => {
+            enterPlayerRoomUI();
+            gmConnection.send({
+              type: 'JOIN_REQUEST',
+              player: myPlayerInfo
+            });
+            showToast('Conectado à tripulação!', 'success');
+          });
+
+          gmConnection.on('data', (data) => {
+            handlePlayerIncomingData(data);
+          });
+
+          gmConnection.on('close', () => {
+            updatePeerStatus('Desconectado', 'bg-red-500');
+            showToast('Conexão encerrada pelo Mestre.', 'error');
+          });
+        });
+
+        peer.on('error', (err) => {
+          console.warn('PeerJS Join Error. Falling back to local channel.', err);
+          joinPlayerFallback();
+        });
+
+      } catch (e) {
+        console.warn('PeerJS Join blocked by Sandbox. Falling back to local channel.', e);
+        joinPlayerFallback();
+      }
+    }
+
+    function joinPlayerFallback() {
+      myPlayerInfo.id = 'PLY_' + Math.random().toString(36).substr(2, 6);
+      isLocalFallback = true;
+      initBroadcastChannel();
+      enterPlayerRoomUI();
+
+      sendBroadcastMsg({
+        type: 'JOIN_REQUEST',
+        player: myPlayerInfo
+      });
+
+      updatePeerStatus('Conectado (Modo Prévia)', 'bg-yellow-500');
+      showToast('Entrou na mesa em Modo Local!', 'info');
+    }
+
+    function enterPlayerRoomUI() {
+      document.getElementById('lobby-screen').classList.add('hidden');
+      updateRoleBadge('Tripulante', 'bg-pirateRed-700 text-white font-bold');
+      if (!isLocalFallback) {
+        updatePeerStatus('Conectado: ' + roomId, 'bg-green-500');
+      }
+    }
+
+    // BROADCAST HELPERS
+    function sendBroadcastMsg(payload) {
+      if (isLocalFallback && broadcastChannel) {
+        broadcastChannel.postMessage({ senderId: myPlayerInfo.id || 'GM', payload: payload });
+      }
+    }
+
+    // DATA HANDLERS
+    function handleGmIncomingData(peerId, data) {
+      if (!data) return;
+
+      if (data.type === 'JOIN_REQUEST') {
+        const id = data.player.id || peerId;
+        gameState.players[id] = {
+          ...data.player,
+          id: id,
+          hp: data.player.hp || 100,
+          maxHp: data.player.maxHp || 100,
+          bounty: data.player.bounty || 1000000,
+          status: data.player.status || []
+        };
+        broadcastState();
+        renderPlayers();
+        renderGmPlayers();
+        updateGmTurnSelectOptions();
+      }
+      else if (data.type === 'REQUEST_ROLL') {
+        const allowed = (gameState.dicePermission === 'ALL') || (gameState.dicePermission === peerId);
+        if (allowed) {
+          executeCentralRoll(gameState.players[peerId]?.name || 'Tripulante');
+        } else {
+          if (connections[peerId]) {
+            connections[peerId].send({ type: 'ROLL_DENIED', message: 'Não é sua vez de girar o dado!' });
+          } else if (isLocalFallback) {
+            sendBroadcastMsg({ type: 'ROLL_DENIED', message: 'Não é sua vez de girar o dado!' });
+          }
+        }
+      }
+    }
+
+    function handlePlayerIncomingData(data) {
+      if (!data) return;
+
+      if (data.type === 'STATE_UPDATE') {
+        gameState = data.state;
+        renderMediaProjections();
+        renderDiceArea();
+        renderPlayers();
+      }
+      else if (data.type === 'DICE_ROLLED') {
+        gameState.lastRoll = data.lastRoll;
+        renderDiceArea();
+        AudioFX.playDice();
+        triggerDiceAnimation();
+      }
+      else if (data.type === 'PING_ALERT') {
+        AudioFX.playBell();
+        showToast('🔔 O MESTRE CHAMA A ATENÇÃO DA TRIPULAÇÃO!', 'warning');
+      }
+      else if (data.type === 'EVENT_CONFRONTATION') {
+        AudioFX.playBattleRoar();
+        AudioFX.playSword();
+        document.getElementById('event-confrontation-overlay').classList.remove('hidden');
+      }
+      else if (data.type === 'EVENT_SESSION_END') {
+        AudioFX.playFanfare();
+        document.getElementById('event-session-end-overlay').classList.remove('hidden');
+      }
+      else if (data.type === 'ROLL_DENIED') {
+        showToast(data.message, 'warning');
+      }
+    }
+
+    function broadcastState() {
+      if (!isGM) return;
+      const payload = { type: 'STATE_UPDATE', state: gameState };
+      
+      Object.values(connections).forEach(conn => conn.open && conn.send(payload));
+      if (isLocalFallback) sendBroadcastMsg(payload);
+    }
+
+    // RENDER GM PLAYER CONTROLS (HP, NEGATIVE HP, BOUNTY INPUT, LAW ROOM TOGGLE)
+    function renderGmPlayers() {
+      const container = document.getElementById('gm-players-list');
+      const playerKeys = Object.keys(gameState.players);
+
+      if (playerKeys.length === 0) {
+        container.innerHTML = `<p class="text-xs text-slate-500 italic text-center py-4">Aguardando tripulantes...</p>`;
+        return;
+      }
+
+      container.innerHTML = playerKeys.map(id => {
+        const p = gameState.players[id];
+        return `
+          <div class="bg-ocean-950 border border-slate-700 rounded-xl p-3 space-y-3">
+            <div class="flex items-center justify-between border-b border-slate-800 pb-2">
+              <div class="flex items-center gap-2">
+                <img src="${p.avatar}" class="w-8 h-8 rounded-full object-cover border border-gold-500/50">
+                <div>
+                  <h4 class="text-xs font-heading font-bold text-slate-200 leading-none">${escapeHtml(p.name)}</h4>
+                  <span class="text-[9px] text-slate-400 font-mono">ID: ${id.substr(0, 8)}</span>
+                </div>
+              </div>
+              <button onclick="kickPlayer('${id}')" class="text-[10px] text-red-400 hover:text-red-300">
+                <i class="fa-solid fa-user-xmark"></i>
+              </button>
+            </div>
+
+            <!-- BOUNTY EDITOR FIELD -->
+            <div class="bg-ocean-900/80 p-2 rounded-lg border border-gold-600/30">
+              <label class="text-[9px] font-heading font-bold text-gold-400 block mb-1 uppercase">Recompensa (฿ Berries)</label>
+              <div class="flex items-center gap-2">
+                <span class="font-pirate text-lg text-gold-400">฿</span>
+                <input type="number" value="${p.bounty}" onchange="setPlayerBountyDirect('${id}', this.value)" class="w-full bg-ocean-950 border border-slate-700 rounded px-2 py-1 text-xs text-gold-300 font-mono font-bold focus:outline-none focus:border-gold-500">
+              </div>
+            </div>
+
+            <!-- HP CONTROLS (Support Negative Values) -->
+            <div class="space-y-1.5">
+              <div class="flex justify-between items-center text-[10px] font-heading font-bold text-slate-300">
+                <span>VIDA: <input type="number" value="${p.hp}" onchange="setPlayerHpDirect('${id}', this.value)" class="w-14 bg-ocean-800 border border-slate-700 rounded text-center text-gold-300 font-bold"> / ${p.maxHp}</span>
+                <span class="text-slate-400 text-[9px]">Vida Máx:</span>
+                <input type="number" value="${p.maxHp}" onchange="setPlayerMaxHp('${id}', this.value)" class="w-14 bg-ocean-800 border border-slate-700 rounded text-center text-slate-200 font-bold">
+              </div>
+
+              <!-- Quick Delta Buttons -->
+              <div class="flex flex-wrap gap-1">
+                <button onclick="adjustPlayerHp('${id}', -10)" class="px-2 py-0.5 bg-red-950 hover:bg-red-900 text-red-300 text-[10px] rounded font-bold border border-red-800/40">-10</button>
+                <button onclick="adjustPlayerHp('${id}', -5)" class="px-2 py-0.5 bg-red-950 hover:bg-red-900 text-red-300 text-[10px] rounded font-bold border border-red-800/40">-5</button>
+                <button onclick="adjustPlayerHp('${id}', -1)" class="px-2 py-0.5 bg-red-950 hover:bg-red-900 text-red-300 text-[10px] rounded font-bold border border-red-800/40">-1</button>
+                <button onclick="adjustPlayerHp('${id}', 1)" class="px-2 py-0.5 bg-green-950 hover:bg-green-900 text-green-300 text-[10px] rounded font-bold border border-green-800/40">+1</button>
+                <button onclick="adjustPlayerHp('${id}', 5)" class="px-2 py-0.5 bg-green-950 hover:bg-green-900 text-green-300 text-[10px] rounded font-bold border border-green-800/40">+5</button>
+                <button onclick="adjustPlayerHp('${id}', 10)" class="px-2 py-0.5 bg-green-950 hover:bg-green-900 text-green-300 text-[10px] rounded font-bold border border-green-800/40">+10</button>
+              </div>
+
+              <!-- Status Toggles INCLUDING LAW'S ROOM -->
+              <div class="flex flex-wrap gap-1.5 pt-1">
+                <button onclick="toggleStatus('${id}', 'Haki')" class="text-[9px] px-2 py-0.5 rounded font-bold ${p.status.includes('Haki') ? 'bg-purple-900 text-purple-200 border border-purple-500' : 'bg-ocean-800 text-slate-400 border border-slate-700'}">⚡ Haki</button>
+
+                <!-- Law's ROOM Toggle -->
+                <button onclick="toggleStatus('${id}', 'ROOM')" class="text-[9px] px-2 py-0.5 rounded font-bold ${p.status.includes('ROOM') ? 'bg-opeCyan-600 text-white border border-cyan-300 shadow-[0_0_8px_#38bdf8]' : 'bg-ocean-800 text-slate-400 border border-slate-700'}">🔵 ROOM (Law)</button>
+
+                <button onclick="toggleStatus('${id}', 'Envenenado')" class="text-[9px] px-2 py-0.5 rounded font-bold ${p.status.includes('Envenenado') ? 'bg-green-900 text-green-200 border border-green-500' : 'bg-ocean-800 text-slate-400 border border-slate-700'}">🧪 Envenenado</button>
+                <button onclick="toggleStatus('${id}', 'Nocauteado')" class="text-[9px] px-2 py-0.5 rounded font-bold ${p.status.includes('Nocauteado') ? 'bg-yellow-900 text-yellow-200 border border-yellow-500' : 'bg-ocean-800 text-slate-400 border border-slate-700'}">💤 Nocauteado</button>
+                <button onclick="toggleStatus('${id}', 'Morto')" class="text-[9px] px-2 py-0.5 rounded font-bold ${p.status.includes('Morto') ? 'bg-red-950 text-red-200 border border-red-600' : 'bg-ocean-800 text-slate-400 border border-slate-700'}">💀 Morto</button>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    // BOUNTY & HP DIRECT EDITORS
+    function setPlayerBountyDirect(peerId, val) {
+      if (!isGM || !gameState.players[peerId]) return;
+      const amount = parseInt(val, 10);
+      gameState.players[peerId].bounty = isNaN(amount) ? 0 : amount;
+      broadcastState(); renderPlayers(); renderGmPlayers();
+      showToast(`Recompensa de ${gameState.players[peerId].name} atualizada para ฿ ${formatBounty(gameState.players[peerId].bounty)}!`, 'info');
+    }
+
+    function adjustPlayerHp(peerId, delta) {
+      if (!isGM || !gameState.players[peerId]) return;
+      const p = gameState.players[peerId];
+      p.hp = p.hp + delta; // Supports negative HP
+      
+      // Auto status checks based on exact rules:
+      if (p.hp < 0) {
+        if (!p.status.includes('Morto')) p.status.push('Morto');
+        p.status = p.status.filter(s => s !== 'Nocauteado');
+      } else if (p.hp === 0) {
+        if (!p.status.includes('Nocauteado')) p.status.push('Nocauteado');
+        p.status = p.status.filter(s => s !== 'Morto');
+      } else {
+        p.status = p.status.filter(s => s !== 'Nocauteado' && s !== 'Morto');
+      }
+
+      broadcastState(); renderPlayers(); renderGmPlayers();
+    }
+
+    function setPlayerHpDirect(peerId, val) {
+      if (!isGM || !gameState.players[peerId]) return;
+      const p = gameState.players[peerId];
+      p.hp = parseInt(val, 10) || 0;
+
+      if (p.hp < 0) {
+        if (!p.status.includes('Morto')) p.status.push('Morto');
+        p.status = p.status.filter(s => s !== 'Nocauteado');
+      } else if (p.hp === 0) {
+        if (!p.status.includes('Nocauteado')) p.status.push('Nocauteado');
+        p.status = p.status.filter(s => s !== 'Morto');
+      } else {
+        p.status = p.status.filter(s => s !== 'Nocauteado' && s !== 'Morto');
+      }
+
+      broadcastState(); renderPlayers(); renderGmPlayers();
+    }
+
+    function setPlayerMaxHp(peerId, newMax) {
+      if (!isGM || !gameState.players[peerId]) return;
+      const val = parseInt(newMax, 10);
+      if (isNaN(val) || val < 1) return;
+      const p = gameState.players[peerId];
+      p.maxHp = val;
+      broadcastState(); renderPlayers(); renderGmPlayers();
+    }
+
+    function toggleStatus(peerId, tag) {
+      if (!isGM || !gameState.players[peerId]) return;
+      const p = gameState.players[peerId];
+      if (p.status.includes(tag)) p.status = p.status.filter(s => s !== tag);
+      else p.status.push(tag);
+      broadcastState(); renderPlayers(); renderGmPlayers();
+    }
+
+    function kickPlayer(peerId) {
+      if (!isGM) return;
+      if (connections[peerId]) { connections[peerId].close(); delete connections[peerId]; }
+      delete gameState.players[peerId];
+      broadcastState(); renderPlayers(); renderGmPlayers(); updateGmTurnSelectOptions();
+    }
+
+    // CREW WANTED POSTER GRID (WITH NEGATIVE HP, MORTO OVERLAY & ROOM DOME AURA)
+    function renderPlayers() {
+      const grid = document.getElementById('players-grid');
+      const countEl = document.getElementById('crew-count');
+      const playerList = Object.values(gameState.players);
+      
+      countEl.innerText = playerList.length;
+
+      if (playerList.length === 0) {
+        grid.innerHTML = `
+          <div class="col-span-full text-center py-10 text-slate-500 bg-ocean-950/40 rounded-xl border border-dashed border-slate-700">
+            <i class="fa-solid fa-skull text-4xl mb-2 text-slate-600"></i>
+            <p class="font-heading text-sm">Nenhum tripulante conectado.</p>
+          </div>
+        `;
+        return;
+      }
+
+      grid.innerHTML = playerList.map(p => {
+        // HP status calculations
+        const isDead = p.hp < 0 || p.status.includes('Morto');
+        const isKnockedOut = p.hp === 0 || p.status.includes('Nocauteado');
+
+        const safeMax = Math.max(1, p.maxHp);
+        const rawPct = Math.round((p.hp / safeMax) * 100);
+        const hpPct = Math.max(0, Math.min(100, rawPct));
+
+        let hpColor = 'bg-green-500';
+        if (isDead) hpColor = 'bg-red-950';
+        else if (isKnockedOut || hpPct < 30) hpColor = 'bg-red-600 animate-pulse';
+        else if (hpPct < 60) hpColor = 'bg-yellow-500';
+
+        const hasHaki = p.status.includes('Haki');
+        const hasRoom = p.status.includes('ROOM');
+
+        let cardEffectClass = '';
+        if (hasRoom) cardEffectClass = 'room-effect';
+        else if (hasHaki) cardEffectClass = 'haki-effect';
+
+        return `
+          <div class="parchment-bg text-parchment-900 rounded-xl wanted-card p-3 flex flex-col justify-between relative ${cardEffectClass}">
+            
+            <div class="text-center border-b border-parchment-800/30 pb-1 mb-2">
+              <h3 class="font-pirate text-xl text-parchment-900 tracking-widest leading-none uppercase">WANTED</h3>
+              <span class="text-[8px] font-heading font-bold text-parchment-800 uppercase tracking-tighter">DEAD OR ALIVE</span>
+            </div>
+
+            <!-- Avatar Frame -->
+            <div class="w-full h-44 bg-parchment-800/10 rounded-lg border-2 border-parchment-800/40 overflow-hidden mb-2 relative shadow-inner">
+              <img src="${p.avatar}" class="w-full h-full object-cover ${isDead ? 'grayscale brightness-50' : isKnockedOut ? 'brightness-75' : ''}" alt="${escapeHtml(p.name)}">
+              
+              <!-- Knockout / Death Big Overlay -->
+              ${isDead ? `
+                <div class="absolute inset-0 flex flex-col items-center justify-center bg-black/75 text-pirateRed-600 font-pirate text-4xl font-bold tracking-wider animate-pulse">
+                  <i class="fa-solid fa-skull text-3xl mb-1"></i> MORTO
+                </div>
+              ` : isKnockedOut ? `
+                <div class="absolute inset-0 flex flex-col items-center justify-center bg-black/60 text-yellow-400 font-pirate text-3xl font-bold tracking-wider">
+                  <i class="fa-solid fa-bed text-2xl mb-1"></i> NOCAUTEADO
+                </div>
+              ` : ''}
+
+              <!-- Badges Overlay -->
+              <div class="absolute top-1 right-1 flex flex-col gap-1 items-end">
+                ${hasRoom ? '<span class="bg-opeCyan-600 text-white text-[8px] font-heading font-bold px-1.5 py-0.5 rounded shadow border border-cyan-300 animate-pulse">🔵 ROOM</span>' : ''}
+                ${hasHaki ? '<span class="bg-purple-900 text-purple-200 text-[8px] font-heading font-bold px-1.5 py-0.5 rounded shadow border border-purple-500">⚡ HAKI</span>' : ''}
+                ${p.status.includes('Envenenado') ? '<span class="bg-green-900 text-green-200 text-[8px] font-heading font-bold px-1.5 py-0.5 rounded shadow border border-green-500">🧪 VENENO</span>' : ''}
+              </div>
+            </div>
+
+            <!-- Name & Bounty Display -->
+            <div class="text-center mb-2">
+              <h4 class="font-pirate text-2xl text-parchment-900 leading-tight truncate" title="${escapeHtml(p.name)}">${escapeHtml(p.name)}</h4>
+              <div class="text-xs font-pirate font-bold text-pirateRed-800 tracking-wider">
+                ฿ ${formatBounty(p.bounty)} -
+              </div>
+            </div>
+
+            <!-- HP Bar -->
+            <div class="space-y-1 bg-parchment-100 p-2 rounded-lg border border-parchment-800/20 shadow-inner">
+              <div class="flex justify-between items-center text-[10px] font-heading font-bold text-parchment-900">
+                <span>VIDA</span>
+                <span>${p.hp} / ${p.maxHp} HP</span>
+              </div>
+              <div class="w-full bg-parchment-800/20 h-3 rounded-full overflow-hidden p-0.5 border border-parchment-800/30">
+                <div class="${hpColor} h-full rounded-full transition-all duration-500" style="width: ${hpPct}%"></div>
+              </div>
+            </div>
+
+          </div>
+        `;
+      }).join('');
+    }
+
+    // CENTRAL PUBLIC DICE ROLLER
+    function requestCentralRoll() {
+      if (isGM) {
+        executeCentralRoll('Mestre RPG');
+      } else {
+        if (isLocalFallback) {
+          sendBroadcastMsg({ type: 'REQUEST_ROLL' });
+        } else {
+          if (!gmConnection || !gmConnection.open) {
+            showToast('Desconectado do Mestre.', 'error');
+            return;
+          }
+          gmConnection.send({ type: 'REQUEST_ROLL' });
+        }
+      }
+    }
+
+    function executeCentralRoll(rollerName) {
+      const min = gameState.diceConfig.min || 1;
+      const max = gameState.diceConfig.max || 20;
+      const result = Math.floor(Math.random() * (max - min + 1)) + min;
+
+      gameState.lastRoll = { value: result, rollerName: rollerName };
+
+      if (isGM) {
+        const payload = { type: 'DICE_ROLLED', lastRoll: gameState.lastRoll };
+        Object.values(connections).forEach(c => c.open && c.send(payload));
+        if (isLocalFallback) sendBroadcastMsg(payload);
+
+        renderDiceArea();
+        AudioFX.playDice();
+        triggerDiceAnimation();
+      }
+    }
+
+    function triggerDiceAnimation() {
+      const display = document.getElementById('dice-result-val');
+      display.classList.remove('animate-roll');
+      void display.offsetWidth;
+      display.classList.add('animate-roll');
+    }
+
+    function renderDiceArea() {
+      const rangeLabel = document.getElementById('dice-range-label');
+      const valEl = document.getElementById('dice-result-val');
+      const nameEl = document.getElementById('dice-roller-name');
+      const turnIndicator = document.getElementById('dice-turn-indicator');
+      const lockNotice = document.getElementById('roll-lock-notice');
+      const rollBtn = document.getElementById('roll-central-btn');
+
+      rangeLabel.innerText = `Intervalo: ${gameState.diceConfig.min} a ${gameState.diceConfig.max}`;
+      
+      if (gameState.lastRoll.value !== null) {
+        valEl.innerText = gameState.lastRoll.value;
+        nameEl.innerText = `Tirado por: ${gameState.lastRoll.rollerName}`;
+      }
+
+      if (gameState.dicePermission === 'ALL') {
+        turnIndicator.innerText = 'Livre para Todos';
+        turnIndicator.className = "text-xs font-heading font-bold px-3 py-1 rounded-full bg-green-500/20 text-green-800 border border-green-800/30";
+        rollBtn.disabled = false; rollBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+        lockNotice.classList.add('hidden');
+      } else if (gameState.dicePermission === 'GM_ONLY') {
+        turnIndicator.innerText = 'Exclusivo do Mestre';
+        turnIndicator.className = "text-xs font-heading font-bold px-3 py-1 rounded-full bg-red-500/20 text-red-800 border border-red-800/30";
+        if (!isGM) {
+          rollBtn.disabled = true; rollBtn.classList.add('opacity-50', 'cursor-not-allowed');
+          lockNotice.classList.remove('hidden');
+        } else {
+          rollBtn.disabled = false; rollBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+          lockNotice.classList.add('hidden');
+        }
+      } else {
+        const targetPlayer = gameState.players[gameState.dicePermission];
+        turnIndicator.innerText = `Vez de: ${targetPlayer ? targetPlayer.name : 'Jogador'}`;
+        turnIndicator.className = "text-xs font-heading font-bold px-3 py-1 rounded-full bg-purple-500/20 text-purple-900 border border-purple-800/30";
+
+        const isMyTurn = isGM || (myPlayerInfo.id === gameState.dicePermission);
+        if (isMyTurn) {
+          rollBtn.disabled = false; rollBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+          lockNotice.classList.add('hidden');
+        } else {
+          rollBtn.disabled = true; rollBtn.classList.add('opacity-50', 'cursor-not-allowed');
+          lockNotice.classList.remove('hidden');
+        }
+      }
+    }
+
+    function setDicePreset(min, max) {
+      document.getElementById('gm-dice-min').value = min;
+      document.getElementById('gm-dice-max').value = max;
+      applyDiceConfig();
+    }
+
+    function applyDiceConfig() {
+      if (!isGM) return;
+      const min = parseInt(document.getElementById('gm-dice-min').value, 10) || 1;
+      const max = parseInt(document.getElementById('gm-dice-max').value, 10) || 20;
+      gameState.diceConfig = { min, max };
+      broadcastState(); renderDiceArea();
+      showToast(`Dado Central ajustado: 1 a ${max}`, 'info');
+    }
+
+    function changeDicePermission(val) {
+      if (!isGM) return;
+      gameState.dicePermission = val;
+      broadcastState(); renderDiceArea();
+      showToast('Permissão de giro atualizada!', 'info');
+    }
+
+    function updateGmTurnSelectOptions() {
+      const select = document.getElementById('gm-grant-turn-select');
+      const cur = select.value;
+      let html = `<option value="ALL">Liberado para Todos</option><option value="GM_ONLY">Apenas Mestre Pode Girar</option>`;
+      Object.values(gameState.players).forEach(p => {
+        html += `<option value="${p.id}">Dar giro para: ${escapeHtml(p.name)}</option>`;
+      });
+      select.innerHTML = html;
+      select.value = cur;
+    }
+
+    // SECRET GM DICE
+    function rollSecretDice() {
+      if (!isGM) return;
+      const max = parseInt(document.getElementById('gm-secret-max').value, 10) || 20;
+      const result = Math.floor(Math.random() * max) + 1;
+
+      document.getElementById('secret-roll-val').innerText = result;
+      AudioFX.playDice();
+
+      const log = document.getElementById('secret-roll-log');
+      const item = document.createElement('div');
+      item.innerText = `d${max} ➔ ${result} (${new Date().toLocaleTimeString()})`;
+      log.prepend(item);
+    }
+
+    // MEDIA PROJECTION SLOTS (1. MAIN, 2. MAP, 3. SHIP)
+    function handleMediaUpload(event, type) {
+      const file = event.target.files[0];
+      if (!file || !isGM) return;
+
+      const maxW = type === 'main' ? 900 : type === 'map' ? 700 : 400;
+
+      compressImage(file, maxW, 0.75, (base64) => {
+        if (type === 'main') {
+          const caption = document.getElementById('gm-main-caption').value.trim();
+          gameState.media.main = { img: base64, caption: caption };
+        } else if (type === 'map') {
+          gameState.media.map = { img: base64 };
+        } else if (type === 'ship') {
+          const shipName = document.getElementById('gm-ship-name-input').value.trim() || 'Thousand Sunny';
+          gameState.media.ship = { img: base64, name: shipName };
+        }
+        broadcastState(); renderMediaProjections();
+        showToast('Mídia atualizada para os jogadores!', 'success');
+      });
+    }
+
+    function clearMedia(type) {
+      if (!isGM) return;
+      if (type === 'main') gameState.media.main = { img: null, caption: '' };
+      if (type === 'map') gameState.media.map = { img: null };
+      if (type === 'ship') gameState.media.ship = { img: null, name: 'Going Merry' };
+      broadcastState(); renderMediaProjections();
+      showToast('Mídia removida.', 'info');
+    }
+
+    function renderMediaProjections() {
+      // 1) Main Stage
+      const mainImg = document.getElementById('stage-main-img');
+      const mainPlaceholder = document.getElementById('stage-main-placeholder');
+      const mainCaptionBar = document.getElementById('stage-main-caption-bar');
+      const mainCaptionText = document.getElementById('stage-main-caption-text');
+
+      if (gameState.media.main && gameState.media.main.img) {
+        mainImg.src = gameState.media.main.img;
+        mainImg.classList.remove('hidden');
+        mainPlaceholder.classList.add('hidden');
+        if (gameState.media.main.caption) {
+          mainCaptionText.innerText = gameState.media.main.caption;
+          mainCaptionBar.classList.remove('hidden');
+        } else { mainCaptionBar.classList.add('hidden'); }
+      } else {
+        mainImg.classList.add('hidden');
+        mainPlaceholder.classList.remove('hidden');
+        mainCaptionBar.classList.add('hidden');
+      }
+
+      // 2) Map Slot
+      const mapImg = document.getElementById('stage-map-img');
+      const mapPlaceholder = document.getElementById('stage-map-placeholder');
+      const zoomBtn = document.getElementById('zoom-map-btn');
+
+      if (gameState.media.map && gameState.media.map.img) {
+        mapImg.src = gameState.media.map.img;
+        mapImg.classList.remove('hidden');
+        mapPlaceholder.classList.add('hidden');
+        zoomBtn.classList.remove('hidden');
+      } else {
+        mapImg.classList.add('hidden');
+        mapPlaceholder.classList.remove('hidden');
+        zoomBtn.classList.add('hidden');
+      }
+
+      // 3) Ship Slot
+      const shipImg = document.getElementById('stage-ship-img');
+      const shipPlaceholderIcon = document.getElementById('stage-ship-placeholder-icon');
+      const shipNameEl = document.getElementById('stage-ship-name');
+
+      if (gameState.media.ship && gameState.media.ship.name) {
+        shipNameEl.innerText = gameState.media.ship.name;
+      }
+      if (gameState.media.ship && gameState.media.ship.img) {
+        shipImg.src = gameState.media.ship.img;
+        shipImg.classList.remove('hidden');
+        shipPlaceholderIcon.classList.add('hidden');
+      } else {
+        shipImg.classList.add('hidden');
+        shipPlaceholderIcon.classList.remove('hidden');
+      }
+    }
+
+    function openMapZoomModal() {
+      if (!gameState.media.map || !gameState.media.map.img) {
+        showToast('Nenhum mapa projetado pelo Mestre ainda.', 'info');
+        return;
+      }
+      document.getElementById('map-zoom-img').src = gameState.media.map.img;
+      document.getElementById('map-zoom-modal').classList.remove('hidden');
+    }
+
+    function closeMapZoomModal() {
+      document.getElementById('map-zoom-modal').classList.add('hidden');
+    }
+
+    // GM DRAMATIC EVENTS BROADCASTING
+    function triggerBattleConfrontationEvent() {
+      if (!isGM) return;
+      const payload = { type: 'EVENT_CONFRONTATION' };
+      Object.values(connections).forEach(c => c.open && c.send(payload));
+      if (isLocalFallback) sendBroadcastMsg(payload);
+
+      AudioFX.playBattleRoar();
+      AudioFX.playSword();
+      document.getElementById('event-confrontation-overlay').classList.remove('hidden');
+    }
+
+    function closeConfrontationEvent() {
+      document.getElementById('event-confrontation-overlay').classList.add('hidden');
+    }
+
+    function triggerSessionEndEvent() {
+      if (!isGM) return;
+      const payload = { type: 'EVENT_SESSION_END' };
+      Object.values(connections).forEach(c => c.open && c.send(payload));
+      if (isLocalFallback) sendBroadcastMsg(payload);
+
+      AudioFX.playFanfare();
+      document.getElementById('event-session-end-overlay').classList.remove('hidden');
+    }
+
+    function closeSessionEndEvent() {
+      document.getElementById('event-session-end-overlay').classList.add('hidden');
+    }
+
+    // PERSONAL PLAYER NOTEBOOK (Saved in localStorage)
+    function openNotebookModal() {
+      loadPersonalNotebook();
+      document.getElementById('notebook-modal').classList.remove('hidden');
+    }
+
+    function closeNotebookModal() {
+      document.getElementById('notebook-modal').classList.add('hidden');
+    }
+
+    function switchNotebookTab(tab) {
+      ['items', 'npcs', 'notes'].forEach(t => {
+        const inputBox = document.getElementById(`nbtab-${t}`);
+        const btn = document.getElementById(`nbtab-btn-${t}`);
+        if (t === tab) {
+          inputBox.classList.remove('hidden');
+          btn.className = "flex-1 py-2 rounded bg-pirateRed-700 text-white shadow";
+        } else {
+          inputBox.classList.add('hidden');
+          btn.className = "flex-1 py-2 rounded text-parchment-800 hover:bg-parchment-800/10";
+        }
+      });
+    }
+
+    function savePersonalNotebook() {
+      const data = {
+        items: document.getElementById('nb-input-items').value,
+        npcs: document.getElementById('nb-input-npcs').value,
+        notes: document.getElementById('nb-input-notes').value
+      };
+      localStorage.setItem('grandline_player_notebook', JSON.stringify(data));
+    }
+
+    function loadPersonalNotebook() {
+      const saved = localStorage.getItem('grandline_player_notebook');
+      if (saved) {
+        try {
+          const parsed = JSON.parse(saved);
+          if (parsed.items) document.getElementById('nb-input-items').value = parsed.items;
+          if (parsed.npcs) document.getElementById('nb-input-npcs').value = parsed.npcs;
+          if (parsed.notes) document.getElementById('nb-input-notes').value = parsed.notes;
+        } catch (e) {}
+      }
+    }
+
+    // GM ENEMY TRACKER
+    function addNpcEnemy() {
+      const name = document.getElementById('npc-name-input').value.trim();
+      const hp = parseInt(document.getElementById('npc-hp-input').value, 10) || 50;
+
+      if (!name) return;
+      npcs.push({ id: Date.now(), name, hp, maxHp: hp });
+      document.getElementById('npc-name-input').value = '';
+      document.getElementById('npc-hp-input').value = '';
+      renderNpcs();
+    }
+
+    function adjustNpcHp(id, delta) {
+      const npc = npcs.find(n => n.id === id);
+      if (npc) {
+        npc.hp = Math.min(npc.maxHp, npc.hp + delta); // Allow negative NPC HP if needed
+        renderNpcs();
+      }
+    }
+
+    function removeNpc(id) {
+      npcs = npcs.filter(n => n.id !== id);
+      renderNpcs();
+    }
+
+    function renderNpcs() {
+      const container = document.getElementById('gm-npc-list');
+      if (npcs.length === 0) {
+        container.innerHTML = `<p class="text-xs text-slate-500 italic text-center py-3">Nenhum inimigo em combate.</p>`;
+        return;
+      }
+
+      container.innerHTML = npcs.map(n => `
+        <div class="bg-ocean-950 p-2 rounded-lg border border-slate-700 flex items-center justify-between text-xs">
+          <div>
+            <span class="font-bold text-slate-200 block">${escapeHtml(n.name)}</span>
+            <span class="text-[10px] ${n.hp < 0 ? 'text-red-600 font-bold' : 'text-red-400'} font-mono">${n.hp} / ${n.maxHp} HP</span>
+          </div>
+          <div class="flex items-center gap-1">
+            <button onclick="adjustNpcHp(${n.id}, -5)" class="px-1.5 py-0.5 bg-red-950 text-red-300 text-[9px] rounded font-bold">-5</button>
+            <button onclick="adjustNpcHp(${n.id}, 5)" class="px-1.5 py-0.5 bg-green-950 text-green-300 text-[9px] rounded font-bold">+5</button>
+            <button onclick="removeNpc(${n.id})" class="text-slate-500 hover:text-red-400 ml-1"><i class="fa-solid fa-trash"></i></button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    // GM NOTES
+    function saveGmNotes() {
+      if (!isGM) return;
+      localStorage.setItem('grandline_gm_script', document.getElementById('gm-notes-textarea').value);
+    }
+
+    function sendGmPing() {
+      if (!isGM) return;
+      const payload = { type: 'PING_ALERT' };
+      Object.values(connections).forEach(c => c.open && c.send(payload));
+      if (isLocalFallback) sendBroadcastMsg(payload);
+      showToast('Alerta enviado!', 'info');
+    }
+
+    function switchGmTab(tab) {
+      ['players', 'media', 'events', 'dice', 'npc', 'script'].forEach(t => {
+        const panel = document.getElementById(`gmtab-${t}`);
+        const btn = document.getElementById(`gmtab-btn-${t}`);
+        if (t === tab) {
+          panel.classList.remove('hidden');
+          btn.className = "flex-1 py-1.5 px-2 rounded text-gold-400 bg-ocean-800 shadow";
+        } else {
+          panel.classList.add('hidden');
+          btn.className = "flex-1 py-1.5 px-2 rounded text-slate-400 hover:text-slate-200";
+        }
+      });
+    }
+
+    function updateRoleBadge(text, classes) {
+      const badge = document.getElementById('role-badge');
+      badge.innerText = text;
+      badge.className = `px-2 py-0.5 text-[10px] font-heading rounded uppercase tracking-wider ${classes}`;
+    }
+
+    function updatePeerStatus(text, dotClass) {
+      const statusEl = document.getElementById('peer-status');
+      statusEl.innerHTML = `
+        <span class="w-2 h-2 rounded-full ${dotClass} inline-block"></span>
+        ${escapeHtml(text)}
+      `;
+    }
+
+    function copyRoomCodeOnly() {
+      if (!roomId) return;
+      copyToClipboard(roomId);
+      showToast(`Código da Sala (${roomId}) copiado!`, 'success');
+    }
+
+    function copyInviteLink() {
+      if (!roomId) {
+        showToast('Crie ou entre em uma sala primeiro!', 'warning');
+        return;
+      }
+      const fullUrl = window.location.origin + window.location.pathname + '?sala=' + encodeURIComponent(roomId);
+      copyToClipboard(fullUrl);
+      showToast('Link da Sala copiado!', 'success');
+    }
+
+    function copyToClipboard(text) {
+      const input = document.createElement('input');
+      input.value = text;
+      document.body.appendChild(input);
+      input.select();
+      document.execCommand('copy');
+      document.body.removeChild(input);
+    }
+
+    function toggleMute() {
+      AudioFX.muted = !AudioFX.muted;
+      const btn = document.getElementById('sound-toggle-btn');
+      btn.innerHTML = AudioFX.muted ? '<i class="fa-solid fa-volume-xmark text-red-400"></i>' : '<i class="fa-solid fa-volume-high"></i>';
+      showToast(AudioFX.muted ? 'Sons desativados' : 'Sons ativados', 'info');
+    }
+
+    function formatBounty(val) {
+      return (val || 0).toLocaleString('pt-BR');
+    }
+
+    function escapeHtml(str) {
+      if (!str) return '';
+      return str.replace(/[&<>"']/g, function(m) {
+        return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[m];
+      });
+    }
+
+    function showToast(message, type = 'info') {
+      const container = document.getElementById('toast-container');
+      const toast = document.createElement('div');
+
+      let bg = 'bg-ocean-800 border-gold-500/50 text-slate-100';
+      if (type === 'success') bg = 'bg-green-900 border-green-500 text-green-100';
+      if (type === 'error') bg = 'bg-red-900 border-red-500 text-red-100';
+      if (type === 'warning') bg = 'bg-yellow-900 border-yellow-500 text-yellow-100';
+
+      toast.className = `${bg} border px-4 py-2.5 rounded-xl shadow-2xl text-xs font-heading font-bold flex items-center gap-2 transition-all duration-300 transform translate-y-2 opacity-0 pointer-events-auto`;
+      toast.innerHTML = `<span>${message}</span>`;
+
+      container.appendChild(toast);
+      setTimeout(() => toast.classList.remove('translate-y-2', 'opacity-0'), 10);
+      setTimeout(() => {
+        toast.classList.add('opacity-0');
+        setTimeout(() => toast.remove(), 300);
+      }, 3500);
+    }
+  </script>
+</body>
+</html>
